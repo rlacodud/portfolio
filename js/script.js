@@ -23,7 +23,7 @@ var now = new Date();
 var year = now.getFullYear(); // 연도
 var month = now.getMonth() + 1; // 월 
 var day = now.getDate(); // 일
-var stDate = new Date(2022, 10, 05);
+var stDate = new Date(2022, 10, 12);
 var endDate = new Date(year, month, day);
 var btMs = endDate.getTime() - stDate.getTime();
 var btDay = btMs / (1000 * 60 * 60 * 24);
@@ -54,12 +54,6 @@ var fixMode = false;
 // on 여부를 확인하는 Boolean값
 let hasOn = false;
 
-
-// // nav click event
-// $('.nav-about').on('click touchstart', function () {
-//   $('#sectionThree').removeClass('fix');
-//   $(document).scrollTop(1100);
-// })
 $('.nav-work').on('click touchstart', function () {
   $('.projectIndexSection').toggleClass('on');
   $('.projectIndexSection .projectIndex').toggleClass('on');
@@ -108,30 +102,6 @@ $(window).on("scroll", function () {
   lastScrollTop = st;
 });
 
-
-// let interval = function () {
-//   var myArrayText = ['빠르고 정확한 개발자 김채영입니다.', '인터렉션에 욕심 많은 개발자 김채영입니다.', '원리를 중시하는 개발자 김채영입니다.'];
-//   var randText = Math.floor(Math.random()*myArrayText.length);
-//   var rValueText = myArrayText[randText];
-//   // 해당 class 추가
-//   $('.random-barcode').addClass('typingRandom');
-//   $('.random-text').html(rValueText);
-//   $('.random-text').addClass('typingRandom');
-//   if(rValueText === '빠르고 정확한 개발자 김채영입니다.') {
-//     $('.random-barcode').html('fast and accurate');
-//   } else if(rValueText === '인터렉션에 욕심 많은 개발자 김채영입니다.') {
-//     $('.random-barcode').html('greed for interaction');
-//   } else if(rValueText === '원리를 중시하는 개발자 김채영입니다.') {
-//     $('.random-barcode').html('moving in principle');
-//   }
-// }
-
-// setInterval(interval, 6000);
-
-// setTimeout(() => {
-//   $('.random-barcode').removeClass('typingRandom');
-//   $('.random-text').removeClass('typingRandom');
-// }, 5500);
 
 function sectionTwoEvent() {
   let documentHeight = $(document).scrollTop();
@@ -1113,7 +1083,6 @@ $('.contents-container.thumnail').on('click touchStart', function (e) {
     $(this).next('.contents-container.scroll').addClass('on');
   }, 50);
 
-  console.log('눌렸죠?', $('.contents-container.scroll .contents').scrollTop())
   $('.contents-container.scroll.on').scrollTop(0);
   $('.contents-container.scroll').css({ 'transform': 'translateY(-50%)' });
   $('.contents-container.scroll').css({ 'display': 'block' });
@@ -1184,82 +1153,6 @@ $('.contents-container.scroll').on('scroll', function (e) {
     }
   }
 })
-
-
-// let lastScrollTopF = 0;
-//   // Header Scroll Event
-// // let lastScrollTop = 0;
-// $(window).on("scroll", function () {
-//   if($('#sectionTwo .container').hasClass('absolute')) {
-//   let documentHeight = $(document).scrollTop();
-//   let st = $(document).scrollTop();
-
-//   // 마우스를 위로 올릴 시
-//   if (st > lastScrollTopF) {
-//     console.log('언제야 정체를 밝혀1', st, lastScrollTopF, documentHeight >= sectionThreeTop)
-//     if (documentHeight >= sectionThreeTop) {
-//       $('#sectionThree').addClass('fix');
-//     }
-//     // 마우스를 아래로 내릴 시
-//   } else if((st < lastScrollTopF)) {
-//     console.log('언제야 정체를 밝혀2', st, lastScrollTopF)
-//     if($('#sectionThree').hasClass('fix') && move === 0) {
-//       $('#sectionThree').removeClass('fix');
-//     }
-//   }
-//   lastScrollTopF = st;
-// }
-// });
-// let lastScrollTopH = 0;
-// function mainScrollEvent(e) {
-//   // 가로 스크롤
-//   function onscrollw(e) {
-//     // sectionThree가 fix되어있고
-//     if ($('#sectionThree').hasClass('fix')) {
-//       // hasOn이 false일 경우 실행
-//       if (!hasOn) {
-//         // console.log('실행되나여', move)
-//         window.onscroll = function (event) {
-//         let st = $(document).scrollTop();
-
-//           // 마우스를 아래로 내릴 때
-//           if (st > lastScrollTopH) {
-//             console.log('맞냐')
-//             move -= varDuration;
-//             // 한계갑보다 넘어갈 경우
-//             if (move < convertPx.vw(-7800)) {
-//               // 지정
-//               move = convertPx.vw(-7800);
-//             }
-//             // 마우스를 위로 올릴 때
-//           } else if (st < lastScrollTopH) {
-//             console.log('맞냐')
-//             move += varDuration;
-//             // 한계값보다 넘어갈 경우
-//             if (move > 0) {
-//               // 지정
-//               move = 0;
-//             }
-//           }
-//           lastScrollTopH = st;
-//         };
-//         horizontalContainer.style.transition = "transform 0.5s linear";
-//         horizontalContainer.style.transform = "translateX(" + move + "px)";
-//       }
-//     }
-//   }
-
-//   if ($('#sectionThree').hasClass('fix') && !hasOn) {
-//     window.addEventListener("scroll", onscrollw);
-//   }
-//   if (!$('#sectionThree').hasClass('fix') && hasOn) {
-//     window.removeEventListener("scroll", onscrollw);
-//   }
-// }
-
-// $(window).scroll(function () {
-//   mainScrollEvent();
-// })
 
 function mainScrollEvent(e) {
   // 가로 스크롤
@@ -1377,9 +1270,7 @@ $('.close').on('click touchstart', function (e) {
 // cursor 이벤트
 function cursor(e) {
   var cursorBgEl = document.querySelector('#cursor-dot');
-  var cursorDotEl = document.querySelector('.circle__svg.cursor');
   var btnListItemEl = document.querySelectorAll('.contents-link a');
-  var thumnailEl = document.querySelectorAll('.thumnail');
 
   function onMoveWindow(e) {
     var posX = e.clientX;
@@ -1387,8 +1278,6 @@ function cursor(e) {
 
     gsap.killTweensOf(cursorBgEl);
     gsap.to(cursorBgEl, { top: posY, left: posX, duration: 0.2 });
-    gsap.killTweensOf(cursorDotEl);
-    gsap.to(cursorDotEl, { top: posY, left: posX, duration: 0.2 });
   }
 
   function onEnterBtnListItemEl() {
@@ -1408,14 +1297,10 @@ function cursor(e) {
   // imageBox 영역에 cursor가 들어올 경우, 실행시키는 이벤트
   function mouseCursorEvent() {
     window.addEventListener('mousemove', onMoveWindow);
-    // for (var i = 0; i < btnListItemEl.length; i++) {
-    //   btnListItemEl[i].addEventListener('mouseenter', onEnterBtnListItemEl);
-    //   btnListItemEl[i].addEventListener('mouseleave', onLeaveBtnListItemEl);
-    // }
-    // for (var i = 0; i < thumnailEl.length; i++) {
-    //   thumnailEl[i].addEventListener('mouseenter', onEnterBtnListItemEl);
-    //   thumnailEl[i].addEventListener('mouseleave', onLeaveBtnListItemEl);
-    // }
+    for (var i = 0; i < btnListItemEl.length; i++) {
+      btnListItemEl[i].addEventListener('mouseenter', onEnterBtnListItemEl);
+      btnListItemEl[i].addEventListener('mouseleave', onLeaveBtnListItemEl);
+    }
   }
 
   mouseCursorEvent();
