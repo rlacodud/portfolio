@@ -1,0 +1,79 @@
+/* 바코드 */
+@font-face {
+  font-family: "code128";
+	src: url("../font/code128.woff2");
+	src: url("../font/code128.woff2#iefix") format("embedded-opentype"),
+  url("../font/code128.woff2") format("woff2"); 
+}
+/* 한글 폰트 */
+@font-face {
+  font-family: "AppleSDGothicNeoL";
+	src: url("../font/AppleSDGothicNeoL.woff2");
+	src: url("../font/AppleSDGothicNeoL.woff2#iefix") format("embedded-opentype"),
+  url("../font/AppleSDGothicNeoL.woff2") format("woff2"); 
+}
+@font-face {
+  font-family: "AppleSDGothicNeoM";
+	src: url("../font/AppleSDGothicNeoM.woff2");
+	src: url("../font/AppleSDGothicNeoM.woff2#iefix") format("embedded-opentype"),
+  url("../font/AppleSDGothicNeoM.woff2") format("woff2"); 
+}
+@font-face {
+  font-family: "AppleSDGothicNeoR";
+	src: url("../font/AppleSDGothicNeoR.woff2");
+	src: url("../font/AppleSDGothicNeoR.woff2#iefix") format("embedded-opentype"),
+  url("../font/AppleSDGothicNeoR.woff2") format("woff2"); 
+}
+@font-face {
+  font-family: "AppleSDGothicNeoEB";
+	src: url("../font/AppleSDGothicNeoEB.woff2");
+	src: url("../font/AppleSDGothicNeoEB.woff2#iefix") format("embedded-opentype"),
+  url("../font/AppleSDGothicNeoEB.woff2") format("woff2"); 
+}
+/* 영어 폰트 */
+@font-face {
+  font-family: "NewYork";
+	src: url("../font/NewYork.woff2");
+	src: url("../font/NewYork.woff2#iefix") format("embedded-opentype"),
+  url("../font/NewYork.woff2") format("woff2"); 
+}
+@font-face {
+  font-family: "NewYorkBold";
+	src: url("../font/NewYorkMediumBold-2.woff2");
+	src: url("../font/NewYorkMediumBold-2.woff2#iefix") format("embedded-opentype"),
+  url("../font/NewYorkMediumBold-2.woff2") format("woff2"); 
+}
+
+
+/* font */
+.code {font-family: "code128";}
+.newyork {font-family: "NewYork"; font-weight: 400;}
+.newyorkB {font-family: "NewYorkBold";}
+.SD-L {font-family: "AppleSDGothicNeoL";}
+.SD-M {font-family: "AppleSDGothicNeoM";}
+.SD-R {font-family: "AppleSDGothicNeoR";}
+.SD-EB {font-family: "AppleSDGothicNeoEB";}
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	vertical-align: top;
+	box-sizing: border-box;
+}
+ol, ul {list-style: none;}
+img {width: 100%;}
+a {width: 100%; height: 100%; display: inline-block;}
