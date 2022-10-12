@@ -85,6 +85,17 @@ $(document).ready(function () {
   setInterval(barcodeAnimation, 2000);
 });
 
+$('.logo').on('click', function() {
+  $('#sectionThree').removeClass('fix');
+  setTimeout (function() {
+    scrollTo(0, 0);
+  }, 100);
+})
+
+$('.random-barcode').on('click', function() {
+  $('#audio').play();
+})
+
 // Header Scroll Event
 let lastScrollTop = 0;
 $(window).on("scroll", function () {
