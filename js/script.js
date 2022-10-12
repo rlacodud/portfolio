@@ -1169,7 +1169,6 @@ function mainScrollEvent(e) {
     if ($('#sectionThree').hasClass('fix')) {
       // hasOn이 false일 경우 실행
       if (!hasOn) {
-        console.log('실행되나여', move)
         window.onmousewheel = function (event) {
           // 마우스를 아래로 내릴 때
           if (e.wheelDelta < 0) {
