@@ -252,14 +252,23 @@ function sectionTwoEvent() {
     $('#sectionTwo .container .text-container p.n2').css({
       'opacity': 0.9
     })
+    $('#sectionTwo .container .text-container p.n2_1').css({
+      'opacity': 0
+    })
   }
   if (documentHeight >= section2Top + convertPx.vw(2000) && documentHeight < section2Top + convertPx.vw(2100)) {
     $('#sectionTwo .container .text-container p.n2').css({
       'opacity': 0.7
     })
+    $('#sectionTwo .container .text-container p.n2_1').css({
+      'opacity': 0.3
+    })
   }
   if (documentHeight >= section2Top + convertPx.vw(2100) && documentHeight < section2Top + convertPx.vw(2200)) {
     $('#sectionTwo .container .text-container p.n2').css({
+      'opacity': 0.5
+    })
+    $('#sectionTwo .container .text-container p.n2_1').css({
       'opacity': 0.5
     })
   }
@@ -267,10 +276,16 @@ function sectionTwoEvent() {
     $('#sectionTwo .container .text-container p.n2').css({
       'opacity': 0.3
     })
+    $('#sectionTwo .container .text-container p.n2_1').css({
+      'opacity': 0.7
+    })
   }
   if (documentHeight >= section2Top + convertPx.vw(2300) && documentHeight < section2Top + convertPx.vw(2400)) {
     $('#sectionTwo .container .text-container p.n2').css({
       'opacity': 0
+    })
+    $('#sectionTwo .container .text-container p.n2_1').css({
+      'opacity': 1
     })
     $('#sectionTwo .container .text-container p.n3').css({
       'opacity': 0
@@ -280,6 +295,9 @@ function sectionTwoEvent() {
     })
   }
   if (documentHeight >= section2Top + convertPx.vw(2400) && documentHeight < section2Top + convertPx.vw(2500)) {
+    $('#sectionTwo .container .text-container p.n2_1').css({
+      'opacity': 0.5
+    })
     $('#sectionTwo .container .text-container p.n3').css({
       'opacity': 0.3
     })
@@ -291,6 +309,9 @@ function sectionTwoEvent() {
     })
   }
   if (documentHeight >= section2Top + convertPx.vw(2500) && documentHeight < section2Top + convertPx.vw(2600)) {
+    $('#sectionTwo .container .text-container p.n2_1').css({
+      'opacity': 0
+    })
     $('#sectionTwo .container .text-container p.n3').css({
       'opacity': 0.5
     })
@@ -319,6 +340,9 @@ function sectionTwoEvent() {
     $('#sectionTwo .container .text-container p.n3').css({
       'opacity': 1
     })
+    $('#sectionTwo .container .text-container p.n3_1').css({
+      'opacity': 0
+    })
     $('#sectionTwo .container .text-container p.n3 .moving-circle.n3').css({
       'stroke-dashoffset': 0
     })
@@ -333,6 +357,9 @@ function sectionTwoEvent() {
     $('#sectionTwo .container .text-container p.n3').css({
       'opacity': 0.5
     })
+    $('#sectionTwo .container .text-container p.n3_1').css({
+      'opacity': 0.5
+    })
     $('#sectionTwo .container .text-container p.n4').css({
       'top': '70%'
     })
@@ -343,6 +370,9 @@ function sectionTwoEvent() {
   if (documentHeight >= section2Top + convertPx.vw(3000) && documentHeight < section2Top + convertPx.vw(3200)) {
     $('#sectionTwo .container .text-container p.n3').css({
       'opacity': 0.3
+    })
+    $('#sectionTwo .container .text-container p.n3_1').css({
+      'opacity': 0.7
     })
     $('#sectionTwo .container .text-container p.n4').css({
       'top': '50%'
@@ -360,6 +390,9 @@ function sectionTwoEvent() {
   if (documentHeight >= section2Top + convertPx.vw(3200) && documentHeight < section2Top + convertPx.vw(3400)) {
     $('#sectionTwo .container .text-container p.n3').css({
       'opacity': 0
+    })
+    $('#sectionTwo .container .text-container p.n3_1').css({
+      'opacity': 1
     })
     $('#sectionTwo .container .text-container p.n4').css({
       'top': '80%'
@@ -381,6 +414,9 @@ function sectionTwoEvent() {
     })
   }
   if (documentHeight >= section2Top + convertPx.vw(3400) && documentHeight < section2Top + convertPx.vw(3600)) {
+    $('#sectionTwo .container .text-container p.n3_1').css({
+      'opacity': 0
+    })
     $('#sectionTwo .container .text-container p.n4').css({
       'top': '50%'
     })
@@ -835,6 +871,9 @@ function sectionTwoEvent() {
     $('#sectionTwo .container .text-container p.n15').css({
       'opacity': '1'
     })
+    $('#sectionTwo .container .text-container p.n4_1').css({
+      'opacity': 0
+    })
   }
   // ==================================================================================================================
   if (documentHeight >= section2Top + convertPx.vw(6800) && documentHeight < section2Top + convertPx.vw(7000)) {
@@ -874,6 +913,9 @@ function sectionTwoEvent() {
     $('#sectionTwo .container .text-container p.n15').css({
       'opacity': '0'
     })
+    $('#sectionTwo .container .text-container p.n4_1').css({
+      'opacity': 1
+    })
     $('.white-circle').css({
       'transform': 'translate(-50%, -50%) scale(0)'
     })
@@ -896,6 +938,9 @@ function sectionTwoEvent() {
     })
     $('.circle__svg').css({
       'transform': 'translate(-50%, -50%) rotate(0deg)'
+    })
+    $('#sectionTwo .container .text-container p.n4_1').css({
+      'opacity': 0
     })
   }
   if (documentHeight >= section2Top + convertPx.vw(7100) && documentHeight < section2Top + convertPx.vw(7200)) {
@@ -1221,7 +1266,7 @@ function mainScrollEvent(e) {
         // 마우스 위
       } else if (e.wheelDelta > 0) {
         // 슬라이드의 왼쪽 최대치 도달 시
-        if (move >= 0) {
+        if (move === 0) {
           // false 해제
           fixMode = false;
         }

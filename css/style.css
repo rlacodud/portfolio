@@ -90,6 +90,9 @@ header .header-right ul li a:hover:after {width: 100%;}
 #sectionTwo .container .text-container p {position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: calc(100vw*150/1920); color: var(--White); transition: all ease-in-out 0.3s; user-select: none;}
 #sectionTwo .container .text-container p.n1 {transform: translateX(165%) translateY(-50%) skewX(300deg);}
 #sectionTwo .container .text-container p.n2 {transform: translateX(-50%) translateY(1000%); width: 100%; font-size: calc(100vw*50/1920); text-align: center;}
+#sectionTwo .container .text-container p.n2_1,
+#sectionTwo .container .text-container p.n3_1,
+#sectionTwo .container .text-container p.n4_1 {position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: calc(100vw*60/1920); opacity: 0;}
 #sectionTwo .container .text-container p.n3 {opacity: 0; width: 100%; text-align: center;}
 #sectionTwo .moving-circle {position: absolute; top: 50%; left: 50%; stroke-dasharray: 500; stroke-dashoffset: 500; transform: translate(-50%, -50%) rotate(-90deg); transition: all ease-in-out 0.3s;}
 #sectionTwo .white-circle {display: none; position: absolute; top: 50%; left: 50%; width: calc(100vw*50/1920); height: calc(100vw*50/1920); background-color: var(--White); transform: translate(-50%, -50%) scale(0); border-radius: 50%; transition: all ease-in-out 0.3s;}
