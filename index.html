@@ -48,13 +48,30 @@
 
 <!-- 스크롤 위치 쿠키에 저장 -->
 
-<script type="text/javascript">
+<script language="javascript" for="plan6" event="onload">
 
-  function SetDivPosition() {
+  //plan6이라는 frame이 onload될때 스크립트를 실행.
+  
+   var strCook = document.cookie;//저장된 쿠키 값을 받아온다.
+   if(strCook.indexOf("!~")!=0) {
+    var intS = strCook.indexOf("!~");
+    var intE = strCook.indexOf("~!");
+    var strPos = strCook.substring(intS+2, intE);//스크롤 위치를 구한다.
+    document.body.scrollTop = strPos;//스크롤 위치를 적용시킨다.
+    }
+   document.plan6.resizeFrame(this);
+  </script>
+  
+  <!-- 스크롤 위치 쿠키에 저장 -->
+  
+    <script type = "text/javascript">
+  
+   function SetDivPosition()
+   {
     var intY = document.body.scrollTop;
-    document.cookie = "yPos=!~" + intY + "~!";
-  }
-</script>
+    document.cookie = "yPos=!~"+intY+"~!";
+   }
+   </script>
 
 <body onscroll="SetDivPosition()">
 
@@ -474,7 +491,7 @@
                 <div class="contents-link">
                   <a href="https://rlacodud.github.io/UID/LGGram/" target="_blank">
                     <div class="up_ani n1 background-image contents-mobile"
-                      style="background-image: url(./img/iphone14_mobile.png);"></div>
+                      style="background-image: url(./img/LG_Gram_Microsite_mobile.png);"></div>
                   </a>
                 </div>
               </div>

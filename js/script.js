@@ -105,14 +105,12 @@ $(window).on("scroll", function () {
 
 function sectionTwoEvent() {
   let documentHeight = $(document).scrollTop();
-  // console.log(documentHeight)
   if (documentHeight >= section2Top) {
     $('#sectionTwo .container').addClass('fixed');
   } else {
     $('#sectionTwo .container').removeClass('fixed');
   }
   if (documentHeight >= section2Bottom) {
-    console.log(documentHeight, sectionThreeTop, '너넨 언제야')
     $('#sectionTwo .container').removeClass('fixed');
     $('#sectionTwo .container').addClass('absolute');
   } else if (documentHeight < section2Bottom && documentHeight >= section2Top) {
@@ -1119,7 +1117,6 @@ $('.contents-container.thumnail').on('click touchStart', function (e) {
 $('.contents-container.scroll').on('scroll', function (e) {
   if ($(this).hasClass('on')) {
     let documentHeight = $(this).scrollTop();
-    // console.log(documentHeight, $(window).scrollTop())
     if (documentHeight >= convertPx.vw(600)) {
       $(this).find('.contents-description').addClass('ani');
       $(this).find('.contents-link .n1').addClass('ani');
@@ -1193,7 +1190,6 @@ function mainScrollEvent(e) {
     if (!hasOn) {
       // 현재 스크롤 위치
       let documentHeight = $(document).scrollTop();
-      console.log(move);
       // 마우스를 아래로 내릴 때
       if (e.wheelDelta < 0) {
         // sectionThree 영역 안에 들어오면
@@ -1226,7 +1222,7 @@ function mainScrollEvent(e) {
         if (move <= convertPx.vw(-7800) && fixMode) {
           $('header').addClass('black');
           $('#sectionThree').addClass('fix');
-        } else if (move >= 0 && !fixMode && documentHeight <= sectionThreeTop) {
+        } else if (move === 0 && !fixMode && documentHeight <= sectionThreeTop) {
           $('header').removeClass('black');
           $('#sectionThree').removeClass('fix');
         }
@@ -1236,6 +1232,7 @@ function mainScrollEvent(e) {
 
   if ($('#sectionThree').hasClass('fix') && !hasOn) {
     window.addEventListener("mousewheel", onscrollw);
+    move = move;
   }
   if (!$('#sectionThree').hasClass('fix') && hasOn) {
     window.removeEventListener("mousewheel", onscrollw);
@@ -1281,14 +1278,12 @@ function cursor(e) {
   }
 
   function onEnterBtnListItemEl() {
-    // console.log('enter');
     if (!cursorBgEl.classList.contains('active')) {
       cursorBgEl.classList.add('active');
     }
   }
 
   function onLeaveBtnListItemEl() {
-    // console.log('leave');
     if (cursorBgEl.classList.contains('active')) {
       cursorBgEl.classList.remove('active');
     }
