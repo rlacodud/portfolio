@@ -54,6 +54,18 @@ var fixMode = false;
 // on 여부를 확인하는 Boolean값
 let hasOn = false;
 
+$('.logo').on('click', function() {
+  $('#sectionThree').removeClass('fix');
+  setTimeout (function() {
+    scrollTo(0, 0);
+  }, 100);
+  $('.projectIndexSection').removeClass('on');
+  $('.projectIndexSection .projectIndex').removeClass('on');
+  $('#webgl-container').css({
+    'opacity': '0.7'
+  })
+})
+
 $('.nav-work').on('click touchstart', function () {
   $('.projectIndexSection').toggleClass('on');
   $('.projectIndexSection .projectIndex').toggleClass('on');
@@ -85,12 +97,6 @@ $(document).ready(function () {
   setInterval(barcodeAnimation, 2000);
 });
 
-$('.logo').on('click', function() {
-  $('#sectionThree').removeClass('fix');
-  setTimeout (function() {
-    scrollTo(0, 0);
-  }, 100);
-})
 
 $('.random-barcode').on('click', function() {
   document.querySelector('#scan').play();
@@ -116,6 +122,7 @@ $(window).on("scroll", function () {
 
 function sectionTwoEvent() {
   let documentHeight = $(document).scrollTop();
+  console.log(documentHeight)
   if (documentHeight >= section2Top) {
     $('#sectionTwo .container').addClass('fixed');
   } else {
