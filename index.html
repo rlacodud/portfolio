@@ -51,27 +51,26 @@
 <script language="javascript" for="plan6" event="onload">
 
   //plan6이라는 frame이 onload될때 스크립트를 실행.
-  
-   var strCook = document.cookie;//저장된 쿠키 값을 받아온다.
-   if(strCook.indexOf("!~")!=0) {
+
+  var strCook = document.cookie;//저장된 쿠키 값을 받아온다.
+  if (strCook.indexOf("!~") != 0) {
     var intS = strCook.indexOf("!~");
     var intE = strCook.indexOf("~!");
-    var strPos = strCook.substring(intS+2, intE);//스크롤 위치를 구한다.
+    var strPos = strCook.substring(intS + 2, intE);//스크롤 위치를 구한다.
     document.body.scrollTop = strPos;//스크롤 위치를 적용시킨다.
-    }
-   document.plan6.resizeFrame(this);
-  </script>
-  
-  <!-- 스크롤 위치 쿠키에 저장 -->
-  
-    <script type = "text/javascript">
-  
-   function SetDivPosition()
-   {
+  }
+  document.plan6.resizeFrame(this);
+</script>
+
+<!-- 스크롤 위치 쿠키에 저장 -->
+
+<script type="text/javascript">
+
+  function SetDivPosition() {
     var intY = document.body.scrollTop;
-    document.cookie = "yPos=!~"+intY+"~!";
-   }
-   </script>
+    document.cookie = "yPos=!~" + intY + "~!";
+  }
+</script>
 
 <body onscroll="SetDivPosition()">
 
@@ -112,8 +111,8 @@
           <a class="code random-barcode typingRandom" href="./down/김채영_이력서&자기소개서.pdf" download="김채영_이력서&자기소개서">
             fast and accurate
           </a>
-          <audio id="audio" class="sound">
-            <source src="./sound/scan.mp3" type="audio/mp3">
+          <audio id="scan" class="sound">
+            <source src="./sound/scan.mp3" type="audio/wav">
           </audio>
           <p class="SD-M random-text typingRandom">
             빠르고 정확한 개발자 김채영입니다.
@@ -653,7 +652,8 @@
               <div class="contents-link-container">
                 <div class="contents-link">
                   <a href="https://rlacodud.github.io/UID/Honda/a_type/Honda_A/index.html" target="_blank">
-                    <div class="up_ani n1 background-image contents-pc" style="background-image: url(./img/Honda_Korea_pc.png);">
+                    <div class="up_ani n1 background-image contents-pc"
+                      style="background-image: url(./img/Honda_Korea_pc.png);">
                     </div>
                   </a>
                 </div>
@@ -846,7 +846,7 @@
         </article>
       </div>
     </section>
-    
+
     <!-- Work Index -->
     <div class="background-image projectIndexSection">
       <div class="background-image projectIndex">

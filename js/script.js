@@ -93,7 +93,7 @@ $('.logo').on('click', function() {
 })
 
 $('.random-barcode').on('click', function() {
-  $('#audio').play();
+  document.querySelector('#scan').play();
 })
 
 // Header Scroll Event
