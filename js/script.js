@@ -33,7 +33,7 @@ function dateFormat(date) {
     '-' + ((date.getDate()) < 9 ? "0" + (date.getDate()) : (date.getDate()));
   return dateFormat2;
 }
-let toDay = dateFormat(new Date('2022-10-05'));
+let toDay = dateFormat(new Date('2022-10-12'));
 $('.update-date').text(`Last Update ${toDay} (D + ${btDay})`);
 
 // sectionTwo
@@ -1294,7 +1294,6 @@ function mainScrollEvent(e) {
 
   if ($('#sectionThree').hasClass('fix') && !hasOn) {
     window.addEventListener("mousewheel", onscrollw);
-    move = move;
   }
   if (!$('#sectionThree').hasClass('fix') && hasOn) {
     window.removeEventListener("mousewheel", onscrollw);
