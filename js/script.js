@@ -23,7 +23,7 @@ var now = new Date();
 var year = now.getFullYear(); // 연도
 var month = now.getMonth() + 1; // 월 
 var day = now.getDate(); // 일
-var stDate = new Date(2022, 10, 12);
+var stDate = new Date(2022, 11, 17);
 var endDate = new Date(year, month, day);
 var btMs = endDate.getTime() - stDate.getTime();
 var btDay = btMs / (1000 * 60 * 60 * 24);
@@ -33,7 +33,7 @@ function dateFormat(date) {
     '-' + ((date.getDate()) < 9 ? "0" + (date.getDate()) : (date.getDate()));
   return dateFormat2;
 }
-let toDay = dateFormat(new Date('2022-10-12'));
+let toDay = dateFormat(new Date('2022-11-17'));
 $('.update-date').text(`Last Update ${toDay} (D + ${btDay})`);
 
 // sectionTwo
