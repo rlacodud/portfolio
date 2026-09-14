@@ -1,0 +1,1920 @@
+:root {
+  --yellow: #f5cb39;
+  --navy: #22252b;
+  --white: #ffffff;
+  --accent: #ff5c39;
+  --ink: #1c1c1a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: var(--white);
+  color: var(--ink);
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  overflow-x: hidden;
+  /* 한글은 단어(어절) 중간에서 줄바꿈되지 않게 하고(keep-all), 그래도
+     컨테이너보다 긴 URL 등 끊어지지 않는 토큰만 예외적으로 줄바꿈해서
+     (anywhere) 가로 스크롤이 생기지 않게 한다 */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+#app {
+  width: 100%;
+  min-height: 100%;
+}
+
+.hero {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100svh;
+  min-height: 560px;
+  background: radial-gradient(
+    circle at 50% 40%,
+    #fffdf5 0%,
+    var(--white) 55%,
+    #fbf6e6 100%
+  );
+  overflow: hidden;
+}
+
+.hero__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  /* 기본은 세로 스크롤(pan-y)을 브라우저에 맡겨서 터치 드래그가 페이지 스크롤과
+     충돌하지 않게 한다. "제품 둘러보기" 모드일 때만 전부 우리가 가로챈다 */
+  touch-action: pan-y;
+}
+
+.hero__canvas.is-exploring {
+  touch-action: none;
+}
+
+.hero__canvas:active {
+  cursor: grabbing;
+}
+
+/* 뒷면 바코드 위에 마우스가 있을 때만(hero/index.js가 레이캐스트로 판단해서
+   토글) 뷰파인더 모양 커서로 바뀌어 "여기를 클릭하면 스캔된다"는 걸 알려준다.
+   커서 개념이 없는 터치 기기에서는 의미가 없어서 포인터가 있는 기기로 한정 */
+@media (pointer: fine) {
+  .hero__canvas.is-hovering-barcode {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cg fill='none' stroke='%23ff5c39' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M2 9V3h6'/%3E%3Cpath d='M26 9V3h-6'/%3E%3Cpath d='M2 19v6h6'/%3E%3Cpath d='M26 19v6h-6'/%3E%3C/g%3E%3Cline x1='5' y1='14' x2='23' y2='14' stroke='%23ff5c39' stroke-width='1.5' stroke-dasharray='2.5 2.5'/%3E%3C/svg%3E")
+        14 14,
+      pointer;
+  }
+}
+
+.hero__canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.55em 1.4em;
+  border-radius: 999px;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.hero__hint.is-idle {
+  animation: hero-hint-pulse 2.6s ease-in-out infinite;
+}
+
+/* 터치가 1차 입력인 기기(coarse pointer)에서는 힌트 대신 이 버튼으로
+   "둘러보기 모드"를 켜야만 드래그가 회전으로 인식된다 (hero/index.js 참고) */
+.hero__explore-btn {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  padding: 0.6em 1.5em;
+  border: none;
+  border-radius: 999px;
+  background: var(--navy);
+  color: var(--white);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  z-index: 5;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.hero__explore-btn:active {
+  transform: translateX(-50%) scale(0.96);
+}
+
+.hero__explore-btn.is-active {
+  background: var(--accent);
+}
+
+@media (pointer: coarse) {
+  .hero__hint {
+    display: none;
+  }
+
+  .hero__explore-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@keyframes hero-hint-pulse {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  15%,
+  55% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0;
+  }
+}
+
+/* --- 바코드 스캔 라인 --- */
+.scan-line {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: -6%;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 92, 57, 0) 0%,
+    rgba(255, 92, 57, 0.95) 50%,
+    rgba(255, 92, 57, 0) 100%
+  );
+  box-shadow: 0 0 26px 6px rgba(255, 92, 57, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.scan-line.is-active {
+  animation: scan-sweep 0.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes scan-sweep {
+  0% {
+    top: -6%;
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 1;
+  }
+  100% {
+    top: 104%;
+    opacity: 0;
+  }
+}
+
+/* --- BEEP: 미국 카툰 "POW!"풍 스타버스트 (흰 배경 + 굵은 검정 보더) --- */
+.beep-bubble {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: clamp(170px, 24vw, 250px);
+  aspect-ratio: 1;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.beep-bubble__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 10px 18px rgba(28, 28, 26, 0.28));
+}
+
+.beep-bubble__shape {
+  fill: var(--white);
+  stroke: var(--ink);
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+.beep-bubble__text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--ink);
+  font-weight: 900;
+  font-style: italic;
+  font-size: clamp(1.5rem, 4vw, 2.3rem);
+  letter-spacing: 0.03em;
+}
+
+.beep-bubble.is-active {
+  animation: beep-pop 0.7s cubic-bezier(0.2, 1.5, 0.4, 1) forwards;
+}
+
+@keyframes beep-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.15) rotate(-10deg);
+  }
+  22% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.3) rotate(5deg);
+  }
+  38% {
+    transform: translate(-50%, -50%) scale(1) rotate(-2deg);
+  }
+  72% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8) rotate(2deg);
+  }
+}
+
+/* --- Hero → POS 전환 --- */
+.pos-screen {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100svh;
+  min-height: 560px;
+  /* POS↔영수증 전환은 오직 ORDER 버튼(또는 딥링크/뒤로가기)을 통한 JS의
+     scrollTo 호출로만 일어나야 한다. overflow-y를 auto로 두면 사용자가
+     직접 휠/스와이프로 스크롤해서 ORDER를 누르지 않고도 영수증 패널로
+     넘어갈 수 있고, 그러면 주소(URL)는 /pos에 머문 채 화면만 바뀌어
+     라우터 상태와 어긋난다 — hidden이어도 JS의 scrollTo/scrollTop은
+     그대로 동작하므로 프로그램적 전환은 막지 않는다 */
+  overflow-y: hidden;
+  overflow-x: hidden;
+  background: var(--navy);
+  --progress: 0;
+}
+
+.pos-screen::-webkit-scrollbar {
+  display: none;
+}
+
+/* 프로젝트 상세 팝업이 떠 있는 동안 뒤의 100vh 스크롤(영수증 패널 전환)이
+   같이 움직이지 않도록 잠근다 */
+.pos-screen.is-modal-open {
+  overflow-y: hidden;
+}
+
+/* [hidden]과 동일 특이도라 위 규칙이 이기지 않도록 명시적으로 꺼준다 */
+.pos-screen[hidden] {
+  display: none;
+}
+
+/* --- 포스기 화면 안의 스크롤 영역(프리뷰/장바구니/프로젝트 팝업/영수증 씬)은
+   기본 스크롤바 대신 어두운 화면 톤에 맞춘 가늘고 은은한 커스텀 스크롤바를 쓴다 --- */
+.pos__preview,
+.pos-cart__list,
+.detail-modal__body,
+.receipt-scene {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.pos__preview::-webkit-scrollbar,
+.pos-cart__list::-webkit-scrollbar,
+.detail-modal__body::-webkit-scrollbar,
+.receipt-scene::-webkit-scrollbar {
+  width: 7px;
+}
+
+.pos__preview::-webkit-scrollbar-track,
+.pos-cart__list::-webkit-scrollbar-track,
+.detail-modal__body::-webkit-scrollbar-track,
+.receipt-scene::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pos__preview::-webkit-scrollbar-thumb,
+.pos-cart__list::-webkit-scrollbar-thumb,
+.detail-modal__body::-webkit-scrollbar-thumb,
+.receipt-scene::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.pos__preview::-webkit-scrollbar-thumb:hover,
+.pos-cart__list::-webkit-scrollbar-thumb:hover,
+.detail-modal__body::-webkit-scrollbar-thumb:hover,
+.receipt-scene::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(245, 203, 57, 0.55);
+  background-clip: padding-box;
+}
+
+/* --- Hero ↔ POS 전환: 두 섹션 모두 position:fixed로 같은 화면 자리를 차지하고
+   있어서, 영수증 패널(checkout-track)이 실제 스크롤로 밀려 올라가는 것과 같은
+   느낌으로 translateY만으로 섹션 자체가 위/아래로 미끄러져 들어오고 나가게
+   만들 수 있다. Hero(위) → POS(그 아래, 더 깊이) → 영수증(그 아래) 순서로 두고,
+   앞으로 갈 땐 위로, 뒤로 갈 땐 아래로 미끄러지는 방향을 통일했다 */
+.hero.is-leaving {
+  animation: hero-leave 0.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes hero-leave {
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+.pos-screen.is-entering {
+  animation: pos-enter 0.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes pos-enter {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- POS → Hero: 뒤로가기. 위 두 전환의 반대 방향이다 --- */
+.pos-screen.is-leaving {
+  animation: pos-leave 0.45s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes pos-leave {
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+.hero.is-entering {
+  animation: hero-enter 0.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- POS 단말기 프레임(베젤) --- */
+/* --- Checkout 트랙: POS 패널과 영수증 패널이 세로로 나란히 쌓여 있고, 섹션 자체가
+   실제로 100vh씩 스크롤(스냅)되며 전환된다. 두 패널은 --progress(0→1, 스크롤 진행도)를
+   공유해서 각자 다른 속도로 움직이는 패럴렉스 효과를 만든다 --- */
+.checkout-track {
+  width: 100%;
+}
+
+.checkout-stage__panel {
+  width: 100%;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* 화면 전체가 곧 포스기 모니터가 되도록 프레임이 뷰포트를 꽉 채우고,
+   그 위에 얇은 모니터 베젤만 남긴다 — 화면 속에 떠 있는 작은 카드가
+   아니라 "이 화면 자체가 포스기"라는 느낌을 준다 */
+.pos-frame {
+  width: 100%;
+  height: 100%;
+  padding: clamp(8px, 1.6vw, 20px);
+  background: linear-gradient(155deg, #303540 0%, #16181d 65%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  opacity: calc(1 - var(--progress) * 0.7);
+  transform: translateY(calc(var(--progress) * -30px))
+    scale(calc(1 - var(--progress) * 0.04));
+}
+
+.pos {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--navy);
+  border-radius: 12px;
+  overflow: hidden;
+  color: var(--white);
+}
+
+/* 화면 안쪽에만 들어가는 유리 질감 — 버튼 클릭을 막지 않도록 반드시 pointer-events: none */
+.pos__glass {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0) 30%
+  );
+}
+
+.pos__glass::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 55%;
+  height: 160%;
+  background: linear-gradient(
+    75deg,
+    rgba(255, 255, 255, 0) 42%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0) 58%
+  );
+  transform: rotate(3deg);
+}
+
+/* --- 상단 상태바: 실제 태블릿/모니터 화면 맨 위의 OS 상태바(와이파이·시간·배터리)를
+   참고했다. 살아있는 시계가 실제로 똑딱거리며 흘러가서 "지금 이 화면이 실행되고
+   있다"는 느낌을 준다 (pos/index.js의 시계 갱신 로직 참고) */
+.pos__header {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 12px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.pos__header-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* 히어로(처음 화면)로 돌아가는 버튼 — 상태바 좌측 끝에 자리잡는다 */
+.pos__header-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 2px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.pos__header-back:hover {
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pos__header-status--right {
+  justify-content: flex-end;
+}
+
+.pos__header-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.pos__header-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pos__header-clock {
+  color: rgba(255, 255, 255, 0.72);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.pos__header-battery {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* --- 본문: 좌측(탭 + 프리뷰) + 우측 장바구니/주문 요약 --- */
+.pos__main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  padding: 22px;
+  gap: 16px;
+}
+
+.pos__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pos__preview {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 26px 28px;
+}
+
+.pos__preview-inner {
+  transform: scale(1);
+  opacity: 1;
+  transition: none;
+}
+
+.pos__preview-inner.is-leaving {
+  animation: pos-panel-leave 0.18s ease forwards;
+}
+
+.pos__preview-inner.is-entering {
+  animation: pos-panel-enter 0.26s ease forwards;
+}
+
+@keyframes pos-panel-leave {
+  to {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+@keyframes pos-panel-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* --- 좌측 상단 탭: 참고 이미지의 카테고리 행처럼 아이콘+라벨 버튼을
+   가로로 나열한다 --- */
+.pos-tabs {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pos-tabs__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.75);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.pos-tabs__item:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.pos-tabs__item.is-active {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--ink);
+}
+
+.pos-tabs__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.pos-tabs__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- 우측 컬럼: 담은(선택한) 항목 목록 + 주문 요약 카드 --- 프리뷰:이 컬럼
+   비율이 대략 7:3이 되도록 폭을 %로 잡는다 --- */
+.pos-cart {
+  width: 30%;
+  max-width: 320px;
+  min-width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  /* 좌측 컬럼은 탭 줄(.pos-tabs) 다음에 프리뷰가 시작되는데, 카트는 그 탭
+     줄에 대응하는 요소가 없어서 그대로 두면 프리뷰보다 위에서 시작해
+     보인다 — 탭 줄 실측 높이(JS가 재는 --tabs-h)만큼 위쪽 여백을 줘서
+     "담은 항목 없음" 문구가 프리뷰 시작점과 같은 높이에서 시작하게 한다 */
+  margin-top: calc(var(--tabs-h, 0px) + 14px);
+}
+
+.pos-cart__list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.pos-cart__empty {
+  margin: 0;
+  padding: 16px 4px;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.pos-cart__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pos-cart__thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.pos-cart__thumb svg {
+  width: 20px;
+  height: 20px;
+}
+
+.pos-cart__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.pos-cart__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.pos-cart__remove {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.65rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pos-cart__remove:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--white);
+}
+
+/* --- 주문 요약 카드: 실제 주문/결제 대시보드의 인보이스 패널을 참고했다.
+   PRINT RECEIPT/CHECKOUT 두 버튼을 하나의 ORDER 버튼으로 합쳐 여기 담는다 --- */
+.pos-summary {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pos-summary__eyebrow {
+  margin: 0;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.pos-summary__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pos-summary__row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.pos-summary__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 9px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.18);
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: var(--white);
+  letter-spacing: 0.02em;
+}
+
+.pos-summary__order {
+  width: 100%;
+  padding: 12px;
+  font-size: 0.8rem;
+}
+
+/* --- 프리뷰 콘텐츠 공통 --- */
+.pos-eyebrow {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--yellow);
+  text-transform: uppercase;
+}
+
+.pos-panel__title {
+  margin: 0 0 10px;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.pos-panel__tagline,
+.pos-panel__summary {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.98rem;
+  line-height: 1.7;
+}
+
+.pos-panel__summary {
+  margin-bottom: 22px;
+}
+
+/* ABOUT */
+.about-mission {
+  margin: 14px 0 24px;
+  padding: 14px 16px;
+  border-left: 2px solid var(--yellow);
+  background: rgba(245, 203, 57, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.about-grid {
+  display: grid;
+  /* minmax(220px, 1fr)이면 컨테이너가 220px보다 좁아질 때(작은 모바일)
+     트랙이 강제로 220px를 확보하려 해서 카드가 영역 밖으로 넘친다.
+     min(220px, 100%)로 가용 너비를 넘지 않게 상한을 걸어준다 */
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  gap: 14px;
+  /* 카드 그림자/기울임이 살짝 튀어나와도 잘리지 않도록 여유를 둔다 */
+  padding: 4px;
+}
+
+/* 카드가 나타날 때 순서대로 살짝 튕기듯 등장한다(easeOutBack 계열) */
+@keyframes about-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.about-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  opacity: 0;
+  animation: about-card-in 0.5s cubic-bezier(0.3, 1.35, 0.6, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+  /* 커서를 따라 살짝 기울어지는 입체 효과 (wireCardTilt가 --tilt-x/--tilt-y를 갱신) */
+  transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition:
+    transform 0.25s cubic-bezier(0.3, 1.3, 0.6, 1),
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.about-card:hover {
+  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.about-card--concept {
+  border-color: rgba(245, 203, 57, 0.35);
+  background: rgba(245, 203, 57, 0.05);
+}
+
+.about-card__index {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--yellow);
+}
+
+.about-card__title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.about-card__hook {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.about-card__cta {
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.about-detail__paragraph {
+  margin: 0 0 16px;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.about-detail__paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.about-detail__paragraph strong {
+  color: var(--yellow);
+  font-weight: 800;
+}
+
+/* LIFE — ABOUT 카드와 같은 등장 스태거 + 커서 기울임을 재사용한다
+   (about-card-in 키프레임, wireCardTilt) */
+.life-grid {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.life-grid__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  animation: about-card-in 0.5s cubic-bezier(0.3, 1.35, 0.6, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+  transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition:
+    transform 0.25s cubic-bezier(0.3, 1.3, 0.6, 1),
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.life-grid__item:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.life-grid__label {
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--yellow);
+}
+
+.life-grid__desc {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* PROJECTS — 썸네일 카드 그리드. 카드를 누르면 상세 팝업(.detail-modal)이 뜬다.
+   이 팝업 컴포넌트(.detail-modal*)는 ABOUT의 스토리 카드에서도 재사용한다 */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr));
+  gap: 14px;
+}
+
+.project-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  padding: 0;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.project-card:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.project-card.is-selected {
+  border-color: var(--yellow);
+}
+
+.project-card__thumb {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+
+.project-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.project-card__thumb svg {
+  width: 38px;
+  height: 38px;
+}
+
+.project-card__check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--yellow);
+  color: var(--ink);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.project-card__check svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2.6;
+}
+
+.project-card.is-selected .project-card__check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.project-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px 14px;
+}
+
+.project-card__id {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--yellow);
+}
+
+.project-card__title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.project-card__tags {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* --- 프로젝트 상세 팝업: 실제 포스기에서 상품을 눌렀을 때 옵션을 고르는
+   팝업이 뜨는 것을 참고했다. .pos 안에서만 뜨는 화면 내부 팝업이다 --- */
+.detail-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 11, 14, 0.62);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.detail-modal-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* body만 스크롤되고 footer(SELECT 버튼)는 항상 하단에 고정되도록 세로 flex로 구성한다 */
+.detail-modal {
+  position: relative;
+  width: min(560px, 100%);
+  max-width: 100%;
+  /* 뒤 화면(POS)이 아예 안 보일 정도로 팝업이 길어지지 않도록 뷰포트의
+     60~80% 범위 안에서만 세로로 자라게 하고, 넘치는 내용은 body가 스크롤한다 */
+  max-height: min(76svh, 100%);
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(155deg, #2c303a 0%, #16181d 100%);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  transform: scale(0.94) translateY(10px);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.detail-modal-backdrop.is-open .detail-modal {
+  transform: scale(1) translateY(0);
+}
+
+/* 닫기 버튼을 스크롤되는 본문 위에 떠 있게 하지 않고, 스크롤과 무관한
+   전용 헤더 줄로 분리해서 내용과 겹쳐 보이지 않게 한다. 프로젝트명을 같이
+   보여줘서 빈 바가 아니라 제목 표시줄처럼 자연스럽게 자리잡게 한다 */
+.detail-modal__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 14px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.detail-modal__header-title {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.detail-modal__content {
+  padding: 22px 26px 26px;
+  min-width: 0;
+}
+
+.detail-modal__close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--white);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  border: none;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.detail-modal__close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* 카드 썸네일과 같은 자리표시자를 배너 크기로 키워서 보여준다 */
+/* 프로젝트마다 프리뷰가 가로형(데스크톱 화면)이거나 세로형(모바일 화면)이라
+   비율이 제각각이다. 고정 aspect-ratio + cover로 자르면 세로 프리뷰는
+   가운데 얇은 띠만 남아 알아볼 수 없어서, 높이만 제한하고 contain으로
+   전체가 보이게 한다(레터박스는 배경색으로 자연스럽게 채워진다) */
+.detail-modal__banner {
+  width: 100%;
+  height: min(42vh, 320px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+
+.detail-modal__banner svg {
+  width: 52px;
+  height: 52px;
+}
+
+.detail-modal__banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.project-modal__footer {
+  flex-shrink: 0;
+  padding: 16px 26px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.project-modal__select {
+  width: 100%;
+}
+
+.project-modal__select.is-selected {
+  background: transparent;
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.project-detail__title {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.project-detail__company {
+  margin: 0 0 12px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+.project-detail__intro {
+  margin: 0 0 4px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.project-detail__role {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.project-detail__heading {
+  margin: 22px 0 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.project-detail__process {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.project-detail__process li {
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 문제 상황 및 해결 과정이 여러 소주제로 나뉜 프로젝트는 서브탭으로 전환한다 */
+.project-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.project-subtab {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.project-subtab:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.project-subtab.is-active {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--ink);
+}
+
+.project-subpanel__title {
+  margin: 0 0 10px;
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.stack-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stack-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(245, 203, 57, 0.12);
+  border: 1px solid rgba(245, 203, 57, 0.3);
+  color: var(--yellow);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.project-detail__retro {
+  margin: 0;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* BLOG */
+.blog-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.blog-list__item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 4px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.14);
+}
+
+.blog-list__item:last-child {
+  border-bottom: none;
+}
+
+.blog-list__category {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--yellow);
+  text-transform: uppercase;
+}
+
+.blog-list__title {
+  color: var(--white);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.blog-list__title:hover {
+  text-decoration: underline;
+}
+
+.blog-list__more,
+.pos-panel__download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: var(--white);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.blog-list__more:hover,
+.pos-panel__download:hover {
+  border-color: var(--yellow);
+  background: rgba(245, 203, 57, 0.08);
+  transform: translateX(2px);
+}
+
+/* EXPERIENCE */
+.experience-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.experience-list__item {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.experience-list__name {
+  margin: 0 0 8px;
+  font-size: 1.02rem;
+  font-weight: 800;
+}
+
+.experience-list__takeaways {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.experience-list__takeaways li {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.pos-btn {
+  padding: 11px 20px;
+  border-radius: 10px;
+  border: none;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.pos-btn:active {
+  transform: scale(0.96);
+}
+
+.pos-btn--primary {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--white);
+}
+
+.pos-btn--primary:hover {
+  opacity: 0.92;
+}
+
+/* --- 영수증 프린터 씬 (두 번째 100vh 패널) ---
+   네모난 단말기 프레임 없이, 패널 배경 위에 프린터+영수증만 정중앙에 떠 있다.
+   스크롤 진행도(--progress)에 맞춰 아래쪽에서 떠오르듯 등장한다 --- */
+.checkout-stage__panel--receipt {
+  background: linear-gradient(155deg, #34302a 0%, #191612 65%);
+}
+
+.receipt-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  /* 영수증 너비 기준으로 프린터 본체를 그보다 56px 넓게 잡으므로, 그만큼을
+     미리 빼둬야 아주 좁은 화면(280px대)에서 프린터가 뷰포트 밖으로 넘치지 않는다 */
+  --paper-width: min(calc(88vw - 56px), 300px);
+}
+
+.receipt-scene__header {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  right: 28px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  opacity: var(--progress);
+}
+
+.receipt-scene__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.receipt-scene__back {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--white);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+
+.receipt-scene__back:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* 프린터+영수증을 하나의 묶음으로 보고, "다 뽑힌 영수증 기준"(프린터 높이 +
+   종이 전체 높이)의 세로 중앙이 화면 정중앙에 오도록 top을 JS(receipt.js의
+   positionStack)에서 픽셀로 계산해 고정한다. 그래서 슬롯은 화면 중앙보다
+   자연히 더 위쪽에 있고, 종이가 인쇄되는 동안에도(outlet 높이가 0→전체로
+   바뀌는 동안에도) 이 top 자체는 바뀌지 않아 슬롯이 흔들리지 않는다 */
+.receipt-scene__stack {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: var(--progress);
+}
+
+/* 참고 이미지처럼 슬롯이 또렷하게 보이는 입체적인 프린터 하우징 —
+   종이보다 확실히 두껍고 넓어서, 종이가 그 아래에 딸린 얇은 바가 아니라
+   "하우징에서 뽑혀 나오는" 것처럼 보이게 한다 */
+.receipt-printer {
+  position: relative;
+  z-index: 1;
+  width: calc(var(--paper-width) + 56px);
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 26px 26px 12px 12px;
+  background: linear-gradient(180deg, #4d5364 0%, #2c303a 55%, #1a1c22 100%);
+  box-shadow:
+    0 16px 28px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transform: translateY(calc((1 - var(--progress)) * 16px));
+}
+
+.receipt-printer__slot {
+  position: absolute;
+  left: 50%;
+  bottom: 9px;
+  transform: translateX(-50%);
+  width: 88%;
+  height: 14px;
+  border-radius: 5px;
+  background: #050505;
+  box-shadow:
+    inset 0 3px 5px rgba(0, 0, 0, 0.95),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* 종이가 하우징보다 위(z-index)에 그려지도록 해서 슬롯 틈을 실제로 가리며
+   뚫고 나오는 것처럼 보이게 하고, 슬롯 쪽으로 바짝 끌어올려 겹친다.
+   outlet 자체의 높이는 (종이를 다 그린 뒤) JS가 한 번 고정하고, 실제
+   "인쇄되는" 모션은 안의 .receipt를 위→아래로 슬라이드시켜서 만든다
+   (아래 .receipt의 transform 참고) */
+.receipt-outlet {
+  position: relative;
+  z-index: 2;
+  width: var(--paper-width);
+  flex-shrink: 0;
+  margin-top: -14px;
+  overflow: hidden;
+}
+
+.receipt {
+  position: relative;
+  background: #faf7ee;
+  color: #1c1c1a;
+  font-family: "SF Mono", "Menlo", "Consolas", ui-monospace, monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  padding: 22px 20px 30px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.32);
+  /* 슬롯(프린터) 뒤에 완전히 숨어 있다가 아래로 슬라이드하며 뽑혀 나온다.
+     스크롤과 동시에 나오면 뽑히는 느낌이 안 나서, 섹션에 다 도착하고 텀을
+     둔 뒤에 JS(receipt.js의 PRINT_DELAY_MS)가 is-printed를 붙여 이 트랜지션을 재생한다.
+     easeOutBack 커브로 제자리를 살짝 지나쳤다가 튕기듯 돌아오게 해서 탄성/텐션을 준다 */
+  transform: translateY(-100%);
+  transition: transform 0.5s cubic-bezier(0.34, 1.22, 0.64, 1);
+}
+
+.receipt.is-printed {
+  transform: translateY(0);
+}
+
+/* 하단 톱니(지그재그) 절취선 — 종이와 같은 색 삼각형을 타일링해서 뒤 배경과 대비시킨다.
+   뾰족한 끝이 종이 쪽으로(위쪽을 향해) 파고드는 모양이 되도록 180도 돌려 붙인다. */
+.receipt::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  height: 8px;
+  background-image:
+    linear-gradient(135deg, transparent 50%, #faf7ee 50%),
+    linear-gradient(-135deg, transparent 50%, #faf7ee 50%);
+  background-size: 16px 16px;
+  background-position: top left;
+  background-repeat: repeat-x;
+  transform: rotate(180deg);
+}
+
+.receipt__header {
+  text-align: center;
+}
+
+.receipt__name {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.receipt__role {
+  margin: 2px 0 0;
+  opacity: 0.7;
+}
+
+.receipt__divider {
+  border-top: 1px dashed rgba(28, 28, 26, 0.35);
+  margin: 14px 0;
+}
+
+.receipt__contact {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.receipt__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.receipt__row dt {
+  font-weight: 700;
+}
+
+.receipt__row dd {
+  margin: 0;
+  text-align: right;
+  word-break: break-all;
+}
+
+.receipt__row dd a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 2px;
+}
+
+.receipt__row dd a:hover {
+  opacity: 0.6;
+}
+
+.receipt__status {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  font-weight: 700;
+}
+
+.receipt__download {
+  display: block;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(28, 28, 26, 0.5);
+  border-radius: 6px;
+  text-align: center;
+  color: inherit;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+
+.receipt__download:hover {
+  background: rgba(28, 28, 26, 0.06);
+}
+
+.receipt__thanks {
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+  margin: 6px 0 16px;
+}
+
+.receipt__barcode {
+  display: flex;
+  justify-content: center;
+}
+
+.receipt__barcode canvas {
+  max-width: 100%;
+}
+
+/* ==========================================================================
+   반응형 — 280px 정도의 아주 좁은 모바일 화면까지 고려한다.
+   860px: 좌측 프리뷰+우측 장바구니 2단 구성이 나란히 들어가기 빠듯해지는
+          지점 — 세로로 쌓는 구조로 전환한다.
+   480px: 폰 크기 — 여백/글자 크기를 좁히고 그리드를 1열로 정리한다.
+   360px: 아주 좁은 화면 — 상태바에서 부차적인 텍스트를 더 줄인다.
+   ========================================================================== */
+@media (max-width: 860px) {
+  .pos-frame {
+    padding: 6px;
+  }
+
+  .pos__main {
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 16px;
+    gap: 18px;
+    /* ORDER SUMMARY가 하단 고정 바로 빠지는 만큼, 그 밑에 깔려 가려지는
+       내용이 없도록 바 높이(JS가 재는 --summary-h)만큼 여백을 더 둔다 */
+    padding-bottom: calc(var(--summary-h, 168px) + 24px);
+  }
+
+  .pos__content {
+    flex: none;
+  }
+
+  /* 좌우 2단일 때는 .pos__preview 안쪽만 스크롤됐지만, 세로로 쌓이면
+     .pos__main 전체가 하나의 스크롤 영역이 되므로 이중 스크롤을 피한다 */
+  .pos__preview {
+    flex: none;
+    overflow: visible;
+    padding: 20px 18px;
+  }
+
+  .pos-cart {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    flex: none;
+    /* 모바일은 탭+프리뷰+카트가 위아래로 한 줄로 쌓이므로 데스크톱용
+       정렬 여백이 필요 없다 */
+    margin-top: 0;
+  }
+
+  .pos-cart__list {
+    flex: none;
+    overflow: visible;
+  }
+
+  /* ORDER SUMMARY: 스크롤을 아무리 내려도 항상 화면 하단에 떠 있게 고정한다 */
+  .pos-summary {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 12;
+    border-radius: 16px 16px 0 0;
+    padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+    background: rgba(20, 22, 27, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .life-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-modal-backdrop {
+    padding: 12px;
+  }
+
+  .detail-modal__content {
+    padding: 16px 16px 18px;
+  }
+
+  .project-modal__footer {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pos__header {
+    padding: 10px 14px;
+    font-size: 0.66rem;
+  }
+
+  .pos__header-label {
+    display: none;
+  }
+
+  .pos__header-clock {
+    font-size: 0.62rem;
+  }
+
+  .pos-tabs__item {
+    padding: 8px 12px;
+    font-size: 0.72rem;
+  }
+
+  .pos-tabs__icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .pos-panel__title {
+    font-size: 1.3rem;
+  }
+
+  .about-mission {
+    padding: 12px 14px;
+    font-size: 0.82rem;
+  }
+
+  .detail-modal__header {
+    padding: 12px 12px 12px 16px;
+  }
+
+  .detail-modal__content {
+    padding: 14px 14px 16px;
+  }
+
+  .project-modal__footer {
+    padding: 10px 14px;
+  }
+
+  .receipt-scene__header {
+    left: 16px;
+    right: 16px;
+    top: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .pos__header-battery {
+    display: none;
+  }
+
+  .pos__header-clock {
+    font-size: 0.58rem;
+  }
+
+  .pos-summary__row,
+  .pos-summary__total {
+    font-size: 0.74rem;
+  }
+}
