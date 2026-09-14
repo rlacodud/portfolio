@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ch_3young — KIM CHAEYOUNG</title>
+    <script>
+      // GitHub Pages 같은 정적 호스팅은 서버 쪽 라우팅이 없어서, /pos/projects/003
+      // 같은 딥링크로 직접 들어오면 이 404.html이 대신 응답한다. 원래 가려던 경로를
+      // sessionStorage에 잠깐 저장해두고 index.html로 돌아가면, index.html이 그
+      // 경로를 읽어 history.replaceState로 주소를 복원한 뒤 라우터가 이어받는다.
+      sessionStorage.setItem("spa-redirect", location.pathname + location.search + location.hash);
+      location.replace("/");
+    </script>
+  </head>
+  <body></body>
+</html>
